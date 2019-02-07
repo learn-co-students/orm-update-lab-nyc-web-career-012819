@@ -28,16 +28,14 @@ class Student
   end
 
   def self.new_from_db(row)
-    new(row[1], row[2], row[0])
+    name = row[1]
+    grade = row[2]
+    id = row[0]
+    new(name, grade, id)
   end
 
   def self.find_by_name(name)
-    sql = <<-SQL
-      SELECT * FROM students
-      WHERE name = ?;
-    SQL
-
-    new_from_db(DB[:conn].execute(sql, name)[0])
+    new_from_db(DB[:conn].execute("SELECT * FROM students WHERE name = ?;", name)[0])
   end
 
   # INSTANCE METHODS ****************************
@@ -49,21 +47,14 @@ class Student
 
   def save
     if id
-      # binding.pry
       update
     else
-      sql = <<-SQL
-        INSERT INTO students (name, grade)
-        VALUES (?, ?);
-      SQL
-
-      DB[:conn].execute(sql, name, grade)
+      DB[:conn].execute("INSERT INTO students (name, grade) VALUES (?, ?);", @name, @grade)
       @id = DB[:conn].execute("SELECT last_insert_rowid() FROM students")[0][0]
     end
   end
 
   def update
-    # binding.pry
     sql = <<-SQL
       UPDATE students
       SET name = ?,
@@ -71,15 +62,6 @@ class Student
       WHERE id = ?;
     SQL
 
-    # binding.pry
-    DB[:conn].execute(sql, name, grade, id)
+    DB[:conn].execute(sql, @name, @grade, @id)
   end
-
-  # PRIVATE METHODS ****************************
-  private
-
-  def self.bulk_create(rows)
-    rows.map { |row| new(row[1], row[2], row[0]) }
-  end
-
 end
